@@ -30,10 +30,18 @@ function App() {
   const [splashTrophy, setSplashTrophy] = useState<'bronze' | 'silver' | 'gold' | null>(null);
   const [showCodewordSplash, setShowCodewordSplash] = useState(false);
   
+  // Custom Sentences State
+  const [customSentences, setCustomSentences] = useState<{en: string[], fr: string[]}>(() => {
+    const saved = localStorage.getItem('tt_custom_sentences');
+    return saved ? JSON.parse(saved) : { en: [], fr: [] };
+  });
+  const [newSentenceText, setNewSentenceText] = useState('');
+  const [newSentenceLang, setNewSentenceLang] = useState<'en' | 'fr'>('en');
+  
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const activeSentences = sentences[lang];
-  const targetSentence = activeSentences[currentSentenceIndex];
+  const activeSentences = [...sentences[lang], ...(customSentences[lang] || [])];
+  const targetSentence = activeSentences[currentSentenceIndex] || activeSentences[0];
 
   const kidFriendlyPasswords = [
     'Dinosaurs', 'Spaceship', 'Unicorn', 'Robot', 'Dragon', 
@@ -59,7 +67,8 @@ function App() {
     localStorage.setItem('tt_seconds_played', totalSecondsPlayed.toString());
     localStorage.setItem('tt_history', JSON.stringify(history));
     localStorage.setItem('tt_target_trophies', targetTrophies.toString());
-  }, [lang, score, totalSecondsPlayed, history, targetTrophies]);
+    localStorage.setItem('tt_custom_sentences', JSON.stringify(customSentences));
+  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences]);
 
   useEffect(() => {
     // Focus input on load and when language changes
@@ -196,7 +205,7 @@ function App() {
     setWpm(0);
     setAccuracy(100);
     setMistakes(0);
-    setCurrentSentenceIndex(Math.floor(Math.random() * sentences[l].length));
+    setCurrentSentenceIndex(Math.floor(Math.random() * ([...sentences[l], ...(customSentences[l] || [])].length)));
   };
 
   const resetProgress = () => {
@@ -387,7 +396,77 @@ function App() {
                 )}
               </div>
 
-              <div className="notification-settings">
+              <div className="sentences-manager" style={{ marginTop: '2rem' }}>
+                <h3>Sentence Manager</h3>
+                <div className="settings-row" style={{ gridTemplateColumns: '3fr 1fr' }}>
+                  <div className="input-group">
+                    <label>Add New Custom Sentence:</label>
+                    <input 
+                      type="text" 
+                      value={newSentenceText} 
+                      onChange={e => setNewSentenceText(e.target.value)} 
+                      placeholder="e.g. A legendary chest appeared in the forest." 
+                    />
+                  </div>
+                  <div className="input-group" style={{ flexDirection: 'row', alignItems: 'flex-end', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <label style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.65rem' }}>Lang</label>
+                      <select 
+                        value={newSentenceLang} 
+                        onChange={e => setNewSentenceLang(e.target.value as 'en' | 'fr')}
+                        style={{ padding: '0.75rem', borderRadius: '8px', background: 'var(--card-bg)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                      >
+                        <option value="en" style={{color: 'black'}}>EN</option>
+                        <option value="fr" style={{color: 'black'}}>FR</option>
+                      </select>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if (newSentenceText.trim().length > 5) {
+                          setCustomSentences(prev => ({
+                            ...prev,
+                            [newSentenceLang]: [...prev[newSentenceLang], newSentenceText.trim()]
+                          }));
+                          setNewSentenceText('');
+                        }
+                      }}
+                      style={{ padding: '0.75rem 1rem', height: '45px', background: 'var(--primary)', color: '#1a1a1a', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                <div className="sentence-list" style={{ marginTop: '1rem', maxHeight: '180px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <h4 style={{ marginBottom: '1rem', color: '#9ca3af', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Custom Sentences ({lang === 'en' ? 'English' : 'French'})</span>
+                    <span style={{ fontSize: '0.8rem', background: 'var(--primary)', color: '#1a1a1a', padding: '0.2rem 0.5rem', borderRadius: '12px', fontWeight: 'bold' }}>{customSentences[lang].length}</span>
+                  </h4>
+                  {customSentences[lang].length === 0 ? (
+                    <div style={{ color: '#6b7280', fontSize: '0.9rem', fontStyle: 'italic' }}>No custom sentences added yet for {lang === 'en' ? 'English' : 'French'}. The app will use the {sentences[lang].length} built-in default sentences.</div>
+                  ) : (
+                    customSentences[lang].map((s, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <span style={{ fontSize: '0.95rem', color: '#e5e7eb', paddingRight: '1rem', lineHeight: '1.4' }}>{s}</span>
+                        <button 
+                          onClick={() => {
+                            const updated = customSentences[lang].filter((_, i) => i !== idx);
+                            setCustomSentences(prev => ({ ...prev, [lang]: updated }));
+                            // Adjust if deleting pushes index out of bounds
+                            if (currentSentenceIndex >= sentences[lang].length + updated.length) {
+                              setCurrentSentenceIndex(0);
+                            }
+                          }}
+                          style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', borderRadius: '4px', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Delete custom sentence">
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="notification-settings" style={{ marginTop: '2rem' }}>
                 <h3><Bell size={20} className="bell-icon" /> Notification Goal</h3>
                 <div className="settings-row" style={{ gridTemplateColumns: '1fr' }}>
                   <div className="input-group">
