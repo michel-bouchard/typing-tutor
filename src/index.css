@@ -1,0 +1,60 @@
+@import url('https://fonts.cdnfonts.com/css/opendyslexic');
+
+:root {
+  font-family: 'OpenDyslexic', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --primary: #4ade80;
+  --error: #ef4444;
+  --bg-color: #1a1a1a;
+  --card-bg: #2a2a2a;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #111827;
+    background-color: #f3f4f6;
+    --primary: #22c55e;
+    --error: #ef4444;
+    --bg-color: #f9fafb;
+    --card-bg: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
