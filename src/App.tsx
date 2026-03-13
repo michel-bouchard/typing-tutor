@@ -52,6 +52,8 @@ function App() {
   const [spaceMode, setSpaceMode] = useState<'always' | 'jit' | 'hidden'>(() => (localStorage.getItem('tt_space_mode') as 'always' | 'jit' | 'hidden') || 'jit');
   const [sentenceLengthMode, setSentenceLengthMode] = useState<'full' | 'short'>(() => (localStorage.getItem('tt_sentence_length') as 'full' | 'short') || 'full');
   const [appTheme, setAppTheme] = useState<'dark' | 'hacker' | 'ocean' | 'cotton-candy' | 'sepia'>(() => (localStorage.getItem('tt_theme') as 'dark' | 'hacker' | 'ocean' | 'cotton-candy' | 'sepia') || 'dark');
+  const [enableStreakShield, setEnableStreakShield] = useState(() => localStorage.getItem('tt_enable_shield') !== 'false');
+  const [enablePersonalBest, setEnablePersonalBest] = useState(() => localStorage.getItem('tt_enable_pb') !== 'false');
   
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -95,7 +97,9 @@ function App() {
     localStorage.setItem('tt_sentence_length', sentenceLengthMode);
     localStorage.setItem('tt_theme', appTheme);
     localStorage.setItem('tt_personal_best', personalBestWpm.toString());
-  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors, layoutMode, spaceMode, sentenceLengthMode, appTheme, personalBestWpm]);
+    localStorage.setItem('tt_enable_shield', enableStreakShield.toString());
+    localStorage.setItem('tt_enable_pb', enablePersonalBest.toString());
+  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors, layoutMode, spaceMode, sentenceLengthMode, appTheme, personalBestWpm, enableStreakShield, enablePersonalBest]);
 
   useEffect(() => {
     // Focus input on load and when language changes
@@ -140,13 +144,14 @@ function App() {
     }
 
     if (madeMistakeThisKeystroke) {
-      if (hasShield) {
+      if (enableStreakShield && hasShield) {
         // Shield absorbs the mistake!
         setHasShield(false);
         setComboCount(0);
         return; // Ignore the keystroke completely
       } else {
         setComboCount(0);
+        setHasShield(false);
         if (newMistakes > mistakes) {
           setMistakes(newMistakes);
         }
@@ -154,10 +159,15 @@ function App() {
     } else {
       // Correct keystroke
       if (val.length > input.length) {
-        const newCombo = comboCount + 1;
-        setComboCount(newCombo);
-        if (newCombo >= 20 && !hasShield) {
-          setHasShield(true);
+        if (enableStreakShield) {
+          const newCombo = comboCount + 1;
+          setComboCount(newCombo);
+          if (newCombo >= 20 && !hasShield) {
+            setHasShield(true);
+          }
+        } else {
+          setComboCount(0);
+          setHasShield(false);
         }
       }
     }
@@ -192,7 +202,7 @@ function App() {
     setAccuracy(finalAccuracy);
 
     // Personal Best Logic
-    if (finalWpm > personalBestWpm && finalWpm > 0) {
+    if (enablePersonalBest && finalWpm > personalBestWpm && finalWpm > 0) {
       setPersonalBestWpm(finalWpm);
       setNewPersonalBest(true);
     } else {
@@ -320,10 +330,10 @@ function App() {
             <>
               <div className="stat-box" title="Words Per Minute" style={{ display: 'flex', alignItems: 'center' }}>
                 <span>⚡ {wpm} WPM</span>
-                {newPersonalBest && <span style={{ marginLeft: '8px', fontSize: '0.75rem', background: '#fbbf24', color: '#1a1a1a', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>New Best!</span>}
+                {enablePersonalBest && newPersonalBest && <span style={{ marginLeft: '8px', fontSize: '0.75rem', background: '#fbbf24', color: '#1a1a1a', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>New Best!</span>}
               </div>
               <div className="stat-box" title="Accuracy">🎯 {accuracy}%</div>
-              {hasShield && <div className="stat-box" title="Streak Shield Active!" style={{ color: '#93c5fd', borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.2)' }}>🛡️ Shielded</div>}
+              {enableStreakShield && hasShield && <div className="stat-box" title="Streak Shield Active!" style={{ color: '#93c5fd', borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.2)' }}>🛡️ Shielded</div>}
             </>
           ) : (
             <div className="stat-box" title="Effort Mode Active">🌱 Growing Brain</div>
@@ -710,6 +720,14 @@ function App() {
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                       <input type="checkbox" checked={softErrors} onChange={e => setSoftErrors(e.target.checked)} style={{ width: 'auto' }}/>
                       Soft Errors (Gentle colors & wobble)
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={enableStreakShield} onChange={e => setEnableStreakShield(e.target.checked)} style={{ width: 'auto' }}/>
+                      Enable Streak Shield (Forgiveness mechanic)
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={enablePersonalBest} onChange={e => setEnablePersonalBest(e.target.checked)} style={{ width: 'auto' }}/>
+                      Enable Personal Best Tracking
                     </label>
                   </div>
                   <div className="input-group">
