@@ -336,7 +336,7 @@ function App() {
 
                 return (
                 <span key={index} className={className}>
-                  {char === ' ' ? '·' : char}
+                  {char === ' ' ? '␣' : char}
                 </span>
               );
             })}
