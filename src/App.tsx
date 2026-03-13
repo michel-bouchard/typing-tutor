@@ -25,7 +25,6 @@ function App() {
     const saved = localStorage.getItem('tt_target_trophies');
     return saved ? parseInt(saved, 10) : 1000;
   });
-  const [hasNotifiedThisSession, setHasNotifiedThisSession] = useState(false);
   const [secretPassword, setSecretPassword] = useState('');
   const [splashTrophy, setSplashTrophy] = useState<'bronze' | 'silver' | 'gold' | null>(null);
   const [showCodewordSplash, setShowCodewordSplash] = useState(false);
@@ -37,6 +36,11 @@ function App() {
   });
   const [newSentenceText, setNewSentenceText] = useState('');
   const [newSentenceLang, setNewSentenceLang] = useState<'en' | 'fr'>('en');
+  
+  const [dyslexicFont, setDyslexicFont] = useState<'default' | 'lexend' | 'comic'>(() => (localStorage.getItem('tt_font') as 'default' | 'lexend' | 'comic') || 'default');
+  const [zenMode, setZenMode] = useState(() => localStorage.getItem('tt_zen_mode') === 'true');
+  const [focusMode, setFocusMode] = useState(() => localStorage.getItem('tt_focus_mode') === 'true');
+  const [softErrors, setSoftErrors] = useState(() => localStorage.getItem('tt_soft_errors') === 'true');
   
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -68,7 +72,11 @@ function App() {
     localStorage.setItem('tt_history', JSON.stringify(history));
     localStorage.setItem('tt_target_trophies', targetTrophies.toString());
     localStorage.setItem('tt_custom_sentences', JSON.stringify(customSentences));
-  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences]);
+    localStorage.setItem('tt_font', dyslexicFont);
+    localStorage.setItem('tt_zen_mode', zenMode.toString());
+    localStorage.setItem('tt_focus_mode', focusMode.toString());
+    localStorage.setItem('tt_soft_errors', softErrors.toString());
+  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors]);
 
   useEffect(() => {
     // Focus input on load and when language changes
@@ -156,11 +164,10 @@ function App() {
       { name: `Sent ${prev.length + 1}`, wpm: finalWpm, accuracy: finalAccuracy }
     ]);
 
-    // Check if goal met this round
-    const hitGoal = targetTrophies && nextScore >= targetTrophies && !hasNotifiedThisSession;
+    // Check if goal met this round (interval check)
+    const hitGoal = typeof targetTrophies === 'number' && targetTrophies > 0 && Math.floor(nextScore / targetTrophies) > Math.floor(score / targetTrophies);
 
     if (hitGoal) {
-      setHasNotifiedThisSession(true);
       setShowCodewordSplash(true);
     } else {
       let trophyLevel: 'bronze' | 'silver' | 'gold' = 'bronze';
@@ -214,7 +221,6 @@ function App() {
     setTotalSecondsPlayed(0);
     setWpm(0);
     setAccuracy(100);
-    setHasNotifiedThisSession(false);
 
     // Give a new random password on reset
     const newPassword = kidFriendlyPasswords[Math.floor(Math.random() * kidFriendlyPasswords.length)];
@@ -243,12 +249,18 @@ function App() {
   };
 
   return (
-    <div className="app-container" onClick={() => inputRef.current?.focus()}>
+    <div className={`app-container font-${dyslexicFont}`} onClick={() => inputRef.current?.focus()}>
       <header className="header">
         <h1><Keyboard size={32} /> Typo Tutor</h1>
         <div className="stats" aria-live="polite">
-          <div className="stat-box" title="Words Per Minute">⚡ {wpm} WPM</div>
-          <div className="stat-box" title="Accuracy">🎯 {accuracy}%</div>
+          {!zenMode ? (
+            <>
+              <div className="stat-box" title="Words Per Minute">⚡ {wpm} WPM</div>
+              <div className="stat-box" title="Accuracy">🎯 {accuracy}%</div>
+            </>
+          ) : (
+            <div className="stat-box" title="Effort Mode Active">🌱 Growing Brain</div>
+          )}
           <div className="stat-box" title="Total Score"><Trophy size={24}/> {score}</div>
         </div>
         <div className="controls">
@@ -279,15 +291,33 @@ function App() {
               <Volume2 size={24} />
             </button>
           </div>
-          <div className="sentence-display">
-            {targetSentence.split('').map((char, index) => {
-              let className = 'char';
-              if (index < input.length) {
-                className += input[index] === char ? ' correct' : ' incorrect';
-              } else if (index === input.length) {
-                className += ' current';
-              }
-              return (
+            <div className={`sentence-display ${focusMode ? 'focus-enabled' : ''}`}>
+              {targetSentence.split('').map((char, index) => {
+                let className = 'char';
+                if (index < input.length) {
+                  className += input[index] === char ? ' correct' : ' incorrect';
+                  if (softErrors && input[index] !== char) {
+                    className += ' soft-error';
+                  }
+                } else if (index === input.length) {
+                  className += ' current';
+                }
+
+                if (focusMode) {
+                  let lastSpaceIdx = targetSentence.lastIndexOf(' ', input.length);
+                  let nextSpaceIdx = targetSentence.indexOf(' ', input.length);
+                  // Treat punctuation as word boundaries if attached to words, but simpler: just spaces
+                  const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
+                  const wordEnd = nextSpaceIdx === -1 ? targetSentence.length : nextSpaceIdx;
+                  
+                  if (index >= wordStart && index < wordEnd) {
+                    className += ' focus-active';
+                  } else {
+                    className += ' focus-dimmed';
+                  }
+                }
+
+                return (
                 <span key={index} className={className}>
                   {char}
                 </span>
@@ -339,6 +369,9 @@ function App() {
             </div>
             <button className="reset-btn" style={{ margin: '0 auto', background: '#f59e0b', color: '#1e293b', border: 'none' }} onClick={() => {
               setShowCodewordSplash(false);
+              const newPassword = kidFriendlyPasswords[Math.floor(Math.random() * kidFriendlyPasswords.length)];
+              setSecretPassword(newPassword);
+              localStorage.setItem('tt_secret_password', newPassword);
               advanceSentence();
             }}>
               Keep Playing
@@ -470,7 +503,7 @@ function App() {
                 <h3><Bell size={20} className="bell-icon" /> Notification Goal</h3>
                 <div className="settings-row" style={{ gridTemplateColumns: '1fr' }}>
                   <div className="input-group">
-                    <label>When trophies reach:</label>
+                    <label>Show word every X trophies (Interval):</label>
                     <input 
                       type="number" 
                       min="10" 
@@ -483,7 +516,38 @@ function App() {
                 </div>
                 <div className="secret-password-display" style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93c5fd', fontSize: '0.95rem' }}>
                   <strong style={{ color: '#fff' }}>Secret Password:</strong> {secretPassword} <br/>
-                  <small style={{ opacity: 0.8 }}>When goals are met, the alert will tell your child to give you this word!</small>
+                  <small style={{ opacity: 0.8 }}>When score goals are met, the alert will tell your child to give you this word!</small>
+                </div>
+              </div>
+
+              <div className="accessibility-settings" style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)' }}>Accessibility & Mindset Settings</h3>
+                <div className="settings-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                  <div className="input-group">
+                    <label>Dyslexia-Friendly Font:</label>
+                    <select 
+                      value={dyslexicFont} 
+                      onChange={e => setDyslexicFont(e.target.value as any)}
+                    >
+                      <option value="default" style={{color: 'black'}}>Default (System Sans)</option>
+                      <option value="lexend" style={{color: 'black'}}>Lexend</option>
+                      <option value="comic" style={{color: 'black'}}>Comic Sans (Recommended)</option>
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={zenMode} onChange={e => setZenMode(e.target.checked)} style={{ width: 'auto' }}/>
+                      Zen Mode (Hide WPM & Accuracy)
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={focusMode} onChange={e => setFocusMode(e.target.checked)} style={{ width: 'auto' }}/>
+                      Focus Mode (Word Highlight)
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={softErrors} onChange={e => setSoftErrors(e.target.checked)} style={{ width: 'auto' }}/>
+                      Soft Errors (Gentle colors & wobble)
+                    </label>
+                  </div>
                 </div>
               </div>
 
