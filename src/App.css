@@ -47,23 +47,26 @@
 }
 
 .controls {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .lang-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid transparent;
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   border-radius: 8px;
   font-family: inherit;
-  font-size: 1.2rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.35rem;
 }
 
 .lang-btn:hover {
