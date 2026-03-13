@@ -22,6 +22,42 @@
   --text-muted: #9ca3af;
 }
 
+:root[data-theme='hacker'] {
+  --primary: #22c55e;
+  --error: #ef4444;
+  --bg-color: #000000;
+  --card-bg: #0a1f0a;
+  --text-main: #4ade80;
+  --text-muted: #166534;
+}
+
+:root[data-theme='ocean'] {
+  --primary: #bae6fd;
+  --error: #fca5a5;
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f0f9ff;
+  --text-muted: #38bdf8;
+}
+
+:root[data-theme='cotton-candy'] {
+  --primary: #db2777;
+  --error: #dc2626;
+  --bg-color: #fdf2f8;
+  --card-bg: #fbcfe8;
+  --text-main: #831843;
+  --text-muted: #be185d;
+}
+
+:root[data-theme='sepia'] {
+  --primary: #854d0e;
+  --error: #b91c1c;
+  --bg-color: #fef08a;
+  --card-bg: #fde047;
+  --text-main: #422006;
+  --text-muted: #ca8a04;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #111827;

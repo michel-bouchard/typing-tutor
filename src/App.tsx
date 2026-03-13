@@ -24,6 +24,10 @@ function App() {
     const saved = localStorage.getItem('tt_history');
     return saved ? JSON.parse(saved) : [];
   });
+  const [personalBestWpm, setPersonalBestWpm] = useState(() => parseInt(localStorage.getItem('tt_personal_best') || '0', 10));
+  const [newPersonalBest, setNewPersonalBest] = useState(false);
+  const [comboCount, setComboCount] = useState(0);
+  const [hasShield, setHasShield] = useState(false);
   const [targetTrophies, setTargetTrophies] = useState<number | ''>(() => {
     const saved = localStorage.getItem('tt_target_trophies');
     return saved ? parseInt(saved, 10) : 1000;
@@ -46,11 +50,16 @@ function App() {
   const [softErrors, setSoftErrors] = useState(() => localStorage.getItem('tt_soft_errors') === 'true');
   const [layoutMode, setLayoutMode] = useState<'vertical' | 'horizontal'>(() => (localStorage.getItem('tt_layout') as 'vertical' | 'horizontal') || 'horizontal');
   const [spaceMode, setSpaceMode] = useState<'always' | 'jit' | 'hidden'>(() => (localStorage.getItem('tt_space_mode') as 'always' | 'jit' | 'hidden') || 'jit');
+  const [sentenceLengthMode, setSentenceLengthMode] = useState<'full' | 'short'>(() => (localStorage.getItem('tt_sentence_length') as 'full' | 'short') || 'full');
+  const [appTheme, setAppTheme] = useState<'dark' | 'hacker' | 'ocean' | 'cotton-candy' | 'sepia'>(() => (localStorage.getItem('tt_theme') as 'dark' | 'hacker' | 'ocean' | 'cotton-candy' | 'sepia') || 'dark');
   
   const inputRef = useRef<HTMLInputElement>(null);
 
   const activeSentences = [...sentences[lang], ...(customSentences[lang] || [])];
-  const targetSentence = activeSentences[currentSentenceIndex] || activeSentences[0];
+  const fullSentence = activeSentences[currentSentenceIndex] || activeSentences[0];
+  const targetSentence = sentenceLengthMode === 'short' 
+    ? fullSentence.split(' ').slice(0, 4).join(' ') 
+    : fullSentence;
 
   const kidFriendlyPasswords = [
     'Dinosaurs', 'Spaceship', 'Unicorn', 'Robot', 'Dragon', 
@@ -83,7 +92,10 @@ function App() {
     localStorage.setItem('tt_soft_errors', softErrors.toString());
     localStorage.setItem('tt_layout', layoutMode);
     localStorage.setItem('tt_space_mode', spaceMode);
-  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors, layoutMode, spaceMode]);
+    localStorage.setItem('tt_sentence_length', sentenceLengthMode);
+    localStorage.setItem('tt_theme', appTheme);
+    localStorage.setItem('tt_personal_best', personalBestWpm.toString());
+  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors, layoutMode, spaceMode, sentenceLengthMode, appTheme, personalBestWpm]);
 
   useEffect(() => {
     // Focus input on load and when language changes
@@ -91,6 +103,10 @@ function App() {
       inputRef.current?.focus();
     }
   }, [lang, currentSentenceIndex, showParentsMenu]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', appTheme);
+  }, [appTheme]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -111,20 +127,42 @@ function App() {
       setStartTime(Date.now());
     }
 
-    setInput(val);
-
     // Track mistakes dynamically for accuracy final calculation
     let newMistakes = mistakes;
+    let madeMistakeThisKeystroke = false;
     if (val.length > input.length) {
       for (let i = input.length; i < val.length; i++) {
         if (val[i] !== targetSentence[i]) {
+          madeMistakeThisKeystroke = true;
           newMistakes++;
         }
       }
-      if (newMistakes > mistakes) {
-        setMistakes(newMistakes);
+    }
+
+    if (madeMistakeThisKeystroke) {
+      if (hasShield) {
+        // Shield absorbs the mistake!
+        setHasShield(false);
+        setComboCount(0);
+        return; // Ignore the keystroke completely
+      } else {
+        setComboCount(0);
+        if (newMistakes > mistakes) {
+          setMistakes(newMistakes);
+        }
+      }
+    } else {
+      // Correct keystroke
+      if (val.length > input.length) {
+        const newCombo = comboCount + 1;
+        setComboCount(newCombo);
+        if (newCombo >= 20 && !hasShield) {
+          setHasShield(true);
+        }
       }
     }
+
+    setInput(val);
 
     // Check completion condition (they matched exactly or typed the max length)
     if (val.length >= targetSentence.length) {
@@ -152,6 +190,14 @@ function App() {
 
     setWpm(finalWpm);
     setAccuracy(finalAccuracy);
+
+    // Personal Best Logic
+    if (finalWpm > personalBestWpm && finalWpm > 0) {
+      setPersonalBestWpm(finalWpm);
+      setNewPersonalBest(true);
+    } else {
+      setNewPersonalBest(false);
+    }
 
     const maxPossiblePoints = 50 + (targetSentence.length * 5) + 50 + 100;
 
@@ -203,6 +249,7 @@ function App() {
     setInput('');
     setStartTime(null);
     setMistakes(0);
+    setNewPersonalBest(false);
     setCurrentSentenceIndex(prev => {
       let nextIndex = Math.floor(Math.random() * activeSentences.length);
       while (nextIndex === prev && activeSentences.length > 1) {
@@ -219,6 +266,7 @@ function App() {
     setWpm(0);
     setAccuracy(100);
     setMistakes(0);
+    setNewPersonalBest(false);
     setCurrentSentenceIndex(Math.floor(Math.random() * ([...sentences[l], ...(customSentences[l] || [])].length)));
   };
 
@@ -228,6 +276,10 @@ function App() {
     setTotalSecondsPlayed(0);
     setWpm(0);
     setAccuracy(100);
+    setPersonalBestWpm(0);
+    setNewPersonalBest(false);
+    setComboCount(0);
+    setHasShield(false);
 
     // Give a new random password on reset
     const newPassword = kidFriendlyPasswords[Math.floor(Math.random() * kidFriendlyPasswords.length)];
@@ -260,14 +312,18 @@ function App() {
   };
 
   return (
-    <div className={`app-container font-${dyslexicFont}`} onClick={() => inputRef.current?.focus()}>
+    <div className={`app-container font-${dyslexicFont} theme-${appTheme}`} onClick={() => inputRef.current?.focus()}>
       <header className="header">
         <h1><Keyboard size={32} /> Typo Tutor</h1>
         <div className="stats" aria-live="polite">
           {!zenMode ? (
             <>
-              <div className="stat-box" title="Words Per Minute">⚡ {wpm} WPM</div>
+              <div className="stat-box" title="Words Per Minute" style={{ display: 'flex', alignItems: 'center' }}>
+                <span>⚡ {wpm} WPM</span>
+                {newPersonalBest && <span style={{ marginLeft: '8px', fontSize: '0.75rem', background: '#fbbf24', color: '#1a1a1a', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>New Best!</span>}
+              </div>
               <div className="stat-box" title="Accuracy">🎯 {accuracy}%</div>
+              {hasShield && <div className="stat-box" title="Streak Shield Active!" style={{ color: '#93c5fd', borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.2)' }}>🛡️ Shielded</div>}
             </>
           ) : (
             <div className="stat-box" title="Effort Mode Active">🌱 Growing Brain</div>
@@ -617,6 +673,29 @@ function App() {
                       <option value="lexend" style={{color: 'black'}}>Lexend</option>
                       <option value="comic" style={{color: 'black'}}>Comic Sans</option>
                       <option value="opendyslexic" style={{color: 'black'}}>OpenDyslexic</option>
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label>App Color Theme:</label>
+                    <select 
+                      value={appTheme} 
+                      onChange={e => setAppTheme(e.target.value as any)}
+                    >
+                      <option value="dark" style={{color: 'black'}}>Default Dark</option>
+                      <option value="hacker" style={{color: 'black'}}>Hacker Green</option>
+                      <option value="ocean" style={{color: 'black'}}>Deep Ocean</option>
+                      <option value="cotton-candy" style={{color: 'black'}}>Cotton Candy</option>
+                      <option value="sepia" style={{color: 'black'}}>Paper Sepia</option>
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label>Lesson Length (Micro-sessions):</label>
+                    <select 
+                      value={sentenceLengthMode} 
+                      onChange={e => setSentenceLengthMode(e.target.value as 'full' | 'short')}
+                    >
+                      <option value="full" style={{color: 'black'}}>Full Sentences</option>
+                      <option value="short" style={{color: 'black'}}>Short Bursts (First 4 words)</option>
                     </select>
                   </div>
                   <div className="input-group">
