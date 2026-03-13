@@ -42,6 +42,7 @@ function App() {
   const [focusMode, setFocusMode] = useState(() => localStorage.getItem('tt_focus_mode') === 'true');
   const [softErrors, setSoftErrors] = useState(() => localStorage.getItem('tt_soft_errors') === 'true');
   const [layoutMode, setLayoutMode] = useState<'vertical' | 'horizontal'>(() => (localStorage.getItem('tt_layout') as 'vertical' | 'horizontal') || 'horizontal');
+  const [spaceMode, setSpaceMode] = useState<'always' | 'jit'>(() => (localStorage.getItem('tt_space_mode') as 'always' | 'jit') || 'jit');
   
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -78,7 +79,8 @@ function App() {
     localStorage.setItem('tt_focus_mode', focusMode.toString());
     localStorage.setItem('tt_soft_errors', softErrors.toString());
     localStorage.setItem('tt_layout', layoutMode);
-  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors, layoutMode]);
+    localStorage.setItem('tt_space_mode', spaceMode);
+  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors, layoutMode, spaceMode]);
 
   useEffect(() => {
     // Focus input on load and when language changes
@@ -303,7 +305,7 @@ function App() {
               <Volume2 size={24} />
             </button>
           </div>
-            <div className={`sentence-display ${focusMode ? 'focus-enabled' : ''}`}>
+            <div className={`sentence-display ${focusMode ? 'focus-enabled' : ''} space-mode-${spaceMode}`}>
               {targetSentence.split('').map((char, index) => {
                 let className = 'char';
                 if (index < input.length) {
@@ -597,6 +599,34 @@ function App() {
                           style={{ width: 'auto' }}
                         /> 
                         Top & Bottom
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="input-group" style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                    <label>Spacebar Visual Hint:</label>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input 
+                          type="radio" 
+                          name="spaceMode" 
+                          value="jit" 
+                          checked={spaceMode === 'jit'} 
+                          onChange={(e) => setSpaceMode(e.target.value as 'jit')} 
+                          style={{ width: 'auto' }}
+                        /> 
+                        Just-In-Time
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input 
+                          type="radio" 
+                          name="spaceMode" 
+                          value="always" 
+                          checked={spaceMode === 'always'} 
+                          onChange={(e) => setSpaceMode(e.target.value as 'always')} 
+                          style={{ width: 'auto' }}
+                        /> 
+                        Always Show
                       </label>
                     </div>
                   </div>

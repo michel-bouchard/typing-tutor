@@ -150,6 +150,19 @@
   opacity: 0.5;
 }
 
+/* JIT Space Mode Logic */
+.space-mode-jit .char.space-char {
+  color: transparent; /* hide it visually */
+  opacity: 0;
+  transition: color 0.2s, opacity 0.2s;
+}
+
+/* Only show space in JIT mode if it's the current target */
+.space-mode-jit .char.space-char.current {
+  color: #3b82f6; /* Blue glow */
+  opacity: 1;
+}
+
 .char.space-char.current {
   color: #3b82f6;
   opacity: 1;
