@@ -334,7 +334,7 @@ function App() {
               </div>
               <div className="stat-box" title="Accuracy">🎯 {accuracy}%</div>
               {enablePersonalBest && personalBestWpm > 0 && <div className="stat-box" title="Personal Best WPM" style={{ color: '#fbbf24', borderColor: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)' }}>🏆 {personalBestWpm}</div>}
-              {enableStreakShield && hasShield && <div className="stat-box" title="Streak Shield Active!" style={{ color: '#93c5fd', borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.2)' }}>🛡️ Shielded</div>}
+              {enableStreakShield && hasShield && <div className="stat-box" title="Streak Shield Active!" style={{ color: '#93c5fd', borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.2)' }}>🛡️</div>}
             </>
           ) : (
             <div className="stat-box" title="Effort Mode Active">🌱 Growing Brain</div>
