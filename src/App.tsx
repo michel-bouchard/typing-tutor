@@ -41,7 +41,7 @@ function App() {
   const [zenMode, setZenMode] = useState(() => localStorage.getItem('tt_zen_mode') === 'true');
   const [focusMode, setFocusMode] = useState(() => localStorage.getItem('tt_focus_mode') === 'true');
   const [softErrors, setSoftErrors] = useState(() => localStorage.getItem('tt_soft_errors') === 'true');
-  const [layoutMode, setLayoutMode] = useState<'vertical' | 'horizontal'>(() => (localStorage.getItem('tt_layout') as 'vertical' | 'horizontal') || 'vertical');
+  const [layoutMode, setLayoutMode] = useState<'vertical' | 'horizontal'>(() => (localStorage.getItem('tt_layout') as 'vertical' | 'horizontal') || 'horizontal');
   
   const inputRef = useRef<HTMLInputElement>(null);
 
