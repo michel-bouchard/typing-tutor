@@ -1,3 +1,5 @@
+If you want to use it i hardcoded the parents dashboard password to be ParentsRule
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
