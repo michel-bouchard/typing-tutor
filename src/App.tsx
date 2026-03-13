@@ -41,6 +41,7 @@ function App() {
   const [zenMode, setZenMode] = useState(() => localStorage.getItem('tt_zen_mode') === 'true');
   const [focusMode, setFocusMode] = useState(() => localStorage.getItem('tt_focus_mode') === 'true');
   const [softErrors, setSoftErrors] = useState(() => localStorage.getItem('tt_soft_errors') === 'true');
+  const [layoutMode, setLayoutMode] = useState<'vertical' | 'horizontal'>(() => (localStorage.getItem('tt_layout') as 'vertical' | 'horizontal') || 'vertical');
   
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +77,8 @@ function App() {
     localStorage.setItem('tt_zen_mode', zenMode.toString());
     localStorage.setItem('tt_focus_mode', focusMode.toString());
     localStorage.setItem('tt_soft_errors', softErrors.toString());
-  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors]);
+    localStorage.setItem('tt_layout', layoutMode);
+  }, [lang, score, totalSecondsPlayed, history, targetTrophies, customSentences, dyslexicFont, zenMode, focusMode, softErrors, layoutMode]);
 
   useEffect(() => {
     // Focus input on load and when language changes
@@ -284,7 +286,7 @@ function App() {
         </div>
       </header>
       
-      <main className="split-screen" aria-label="Typing interface">
+      <main className={`split-screen layout-${layoutMode}`} aria-label="Typing interface">
         <section className="target-section">
           <div className="target-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
             <button className="tts-btn" onClick={(e) => { e.stopPropagation(); playTTS(); }} title="Read Aloud" aria-label="Read sentence aloud">
@@ -531,7 +533,8 @@ function App() {
                     >
                       <option value="default" style={{color: 'black'}}>Default (System Sans)</option>
                       <option value="lexend" style={{color: 'black'}}>Lexend</option>
-                      <option value="comic" style={{color: 'black'}}>Comic Sans (Recommended)</option>
+                      <option value="comic" style={{color: 'black'}}>Comic Sans</option>
+                      <option value="opendyslexic" style={{color: 'black'}}>OpenDyslexic</option>
                     </select>
                   </div>
                   <div className="input-group">
@@ -548,6 +551,33 @@ function App() {
                       Soft Errors (Gentle colors & wobble)
                     </label>
                   </div>
+                  <div className="input-group">
+                    <label>Screen Layout:</label>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input 
+                          type="radio" 
+                          name="layout" 
+                          value="vertical" 
+                          checked={layoutMode === 'vertical'} 
+                          onChange={(e) => setLayoutMode(e.target.value as 'vertical')} 
+                          style={{ width: 'auto' }}
+                        /> 
+                        Side-by-Side
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input 
+                          type="radio" 
+                          name="layout" 
+                          value="horizontal" 
+                          checked={layoutMode === 'horizontal'} 
+                          onChange={(e) => setLayoutMode(e.target.value as 'horizontal')} 
+                          style={{ width: 'auto' }}
+                        /> 
+                        Top & Bottom
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -555,6 +585,11 @@ function App() {
                 <button className="reset-btn" onClick={resetProgress}>
                   <RotateCcw size={20} /> Reset All Progress
                 </button>
+              </div>
+
+              <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.85rem', color: '#9ca3af', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
+                <p>The font used in this page can be downloaded for use on your PC or Mac at <a href="https://opendyslexic.org/" target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'none' }}>https://opendyslexic.org/</a></p>
+                <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>I have no connection to them but really enjoy their font, so shout out!</p>
               </div>
             </div>
           </div>

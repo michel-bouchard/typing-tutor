@@ -76,14 +76,16 @@
   font-weight: bold;
 }
 
+/* Default mobile is always column */
 .split-screen {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
+/* Only apply row flex if layout is vertical AND screen is wide enough */
 @media (min-width: 768px) {
-  .split-screen {
+  .split-screen.layout-vertical {
     flex-direction: row;
   }
 }
@@ -96,15 +98,29 @@
   justify-content: center;
 }
 
+/* Base style: text section has reading border */
 .target-section {
   background: var(--bg-color);
-  border-right: 4px dashed var(--text-muted);
+}
+
+/* Vertical layout specific borders */
+@media (min-width: 768px) {
+  .split-screen.layout-vertical .target-section {
+    border-right: 4px dashed var(--text-muted);
+    border-bottom: none;
+  }
+}
+
+/* Horizontal layout (or mobile) specific borders */
+.split-screen.layout-horizontal .target-section {
+  border-bottom: 4px dashed var(--text-muted);
+  border-right: none;
 }
 
 @media (max-width: 767px) {
   .target-section {
-    border-right: none;
     border-bottom: 4px dashed var(--text-muted);
+    border-right: none;
   }
 }
 
@@ -484,6 +500,11 @@
 .font-comic button {
   font-family: 'Comic Sans MS', 'Comic Sans', cursive !important;
   letter-spacing: 3px;
+}
+.font-opendyslexic,
+.font-opendyslexic input,
+.font-opendyslexic button {
+  font-family: 'OpenDyslexic', sans-serif !important;
 }
 
 /* Soft Errors Mode */
