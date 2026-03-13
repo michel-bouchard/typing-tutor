@@ -32,6 +32,7 @@ function App() {
     const saved = localStorage.getItem('tt_target_trophies');
     return saved ? parseInt(saved, 10) : 1000;
   });
+  const [showEndError, setShowEndError] = useState(false);
   const [secretPassword, setSecretPassword] = useState('');
   const [splashTrophy, setSplashTrophy] = useState<'bronze' | 'silver' | 'gold' | null>(null);
   const [showCodewordSplash, setShowCodewordSplash] = useState(false);
@@ -178,11 +179,15 @@ function App() {
     if (val.length >= targetSentence.length) {
       // If it matches exactly
       if (val === targetSentence) {
+        setShowEndError(false);
         finishSentence(newMistakes);
       } else {
         // Stop typing, wait for them to fix errors by hitting backspace
+        setShowEndError(true);
         setInput(val.slice(0, targetSentence.length));
       }
+    } else {
+      setShowEndError(false); // They hit backspace and fixed it
     }
   };
 
@@ -259,6 +264,7 @@ function App() {
     setInput('');
     setStartTime(null);
     setMistakes(0);
+    setShowEndError(false);
     setNewPersonalBest(false);
     setCurrentSentenceIndex(prev => {
       let nextIndex = Math.floor(Math.random() * activeSentences.length);
@@ -276,6 +282,7 @@ function App() {
     setWpm(0);
     setAccuracy(100);
     setMistakes(0);
+    setShowEndError(false);
     setNewPersonalBest(false);
     setCurrentSentenceIndex(Math.floor(Math.random() * ([...sentences[l], ...(customSentences[l] || [])].length)));
   };
@@ -288,6 +295,7 @@ function App() {
     setAccuracy(100);
     setPersonalBestWpm(0);
     setNewPersonalBest(false);
+    setShowEndError(false);
     setComboCount(0);
     setHasShield(false);
 
@@ -412,11 +420,11 @@ function App() {
           </div>
         </section>
 
-        <section className="input-section">
+        <section className="input-section" style={{ position: 'relative' }}>
           <input
             ref={inputRef}
             type="text"
-            className="typing-input"
+            className={`typing-input ${showEndError ? 'shake-animation' : ''}`}
             value={input}
             onChange={handleInput}
             spellCheck="false"
@@ -429,7 +437,22 @@ function App() {
             }
             aria-label="Typing input section"
           />
-          <div className="keyboard-hint">
+          {showEndError && (
+            <div className="error-tooltip" style={{
+              marginTop: '1rem',
+              color: 'var(--error)',
+              background: 'rgba(239, 68, 68, 0.1)',
+              padding: '1rem',
+              borderRadius: '8px',
+              border: '2px dashed rgba(239, 68, 68, 0.5)',
+              textAlign: 'center',
+              fontWeight: 'bold',
+              animation: 'fadeIn 0.3s ease-in'
+            }}>
+              Oops! You have a typo. Use Backspace (⌫) to slide back and fix it!
+            </div>
+          )}
+          <div className="keyboard-hint" style={{ marginTop: showEndError ? '1rem' : '0' }}>
             {lang === 'en' && `Keyboard Layout: US English`}
             {lang === 'fr' && `Type in French! Make sure your keyboard is set to French.`}
             {lang === 'es' && `Type in Spanish! Make sure your keyboard is set to Spanish.`}
