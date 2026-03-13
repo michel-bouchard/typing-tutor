@@ -15,6 +15,9 @@ function App() {
   const [mistakes, setMistakes] = useState(0);
   
   // Parents Menu State
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
   const [showParentsMenu, setShowParentsMenu] = useState(false);
   const [totalSecondsPlayed, setTotalSecondsPlayed] = useState(() => parseInt(localStorage.getItem('tt_seconds_played') || '0', 10));
   const [history, setHistory] = useState<{name: string, wpm: number, accuracy: number}[]>(() => {
@@ -286,12 +289,9 @@ function App() {
           </button>
           <button className="settings-btn" onClick={(e) => { 
             e.stopPropagation(); 
-            const pwd = prompt("Enter Parents Password:");
-            if (pwd === "ParentsRule") {
-              setShowParentsMenu(true);
-            } else if (pwd !== null) {
-              alert("Incorrect Password!");
-            }
+            setShowPasswordPrompt(true);
+            setPasswordInput('');
+            setPasswordError(false);
           }} title="Parents Menu">
             <Settings size={22}/>
           </button>
@@ -378,6 +378,64 @@ function App() {
             {splashTrophy === 'gold' && 'Amazing!'}
             {splashTrophy === 'silver' && 'Great Job!'}
             {splashTrophy === 'bronze' && 'Good Try!'}
+          </div>
+        </div>
+      )}
+
+      {showPasswordPrompt && (
+        <div className="modal-overlay codeword-overlay" style={{ zIndex: 4000 }} onClick={() => setShowPasswordPrompt(false)}>
+          <div className="modal" style={{ maxWidth: '400px', padding: '2rem' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>-TopSecret-</h2>
+              <button className="close-btn" onClick={() => setShowPasswordPrompt(false)}><X size={24} /></button>
+            </div>
+            
+            <div className="input-group">
+              <label style={{ marginBottom: '0.5rem' }}>Enter Parents Password:</label>
+              <input 
+                type="password" 
+                value={passwordInput}
+                onChange={e => {
+                  setPasswordInput(e.target.value);
+                  setPasswordError(false);
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    if (passwordInput === "ParentsRule") {
+                      setShowPasswordPrompt(false);
+                      setShowParentsMenu(true);
+                    } else {
+                      setPasswordError(true);
+                    }
+                  }
+                }}
+                autoFocus
+                style={{ borderColor: passwordError ? '#ef4444' : 'rgba(255,255,255,0.1)' }}
+              />
+              {passwordError && <span style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem' }}>Incorrect Password!</span>}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', gap: '1rem' }}>
+              <button 
+                onClick={() => setShowPasswordPrompt(false)}
+                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  if (passwordInput === "ParentsRule") {
+                    setShowPasswordPrompt(false);
+                    setShowParentsMenu(true);
+                  } else {
+                    setPasswordError(true);
+                  }
+                }}
+                style={{ background: 'var(--primary)', color: '#1a1a1a', border: 'none', padding: '0.5rem 1.5rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Enter
+              </button>
+            </div>
           </div>
         </div>
       )}
