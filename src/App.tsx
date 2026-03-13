@@ -5,7 +5,7 @@ import { sentences } from './data/sentences';
 import './App.css';
 
 function App() {
-  const [lang, setLang] = useState<'en' | 'fr'>(() => (localStorage.getItem('tt_lang') as 'en' | 'fr') || 'en');
+  const [lang, setLang] = useState<'en' | 'fr' | 'es' | 'it'>(() => (localStorage.getItem('tt_lang') as 'en' | 'fr' | 'es' | 'it') || 'en');
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [input, setInput] = useState('');
   const [score, setScore] = useState(() => parseInt(localStorage.getItem('tt_score') || '0', 10));
@@ -30,12 +30,12 @@ function App() {
   const [showCodewordSplash, setShowCodewordSplash] = useState(false);
   
   // Custom Sentences State
-  const [customSentences, setCustomSentences] = useState<{en: string[], fr: string[]}>(() => {
+  const [customSentences, setCustomSentences] = useState<{en: string[], fr: string[], es: string[], it: string[]}>(() => {
     const saved = localStorage.getItem('tt_custom_sentences');
-    return saved ? JSON.parse(saved) : { en: [], fr: [] };
+    return saved ? JSON.parse(saved) : { en: [], fr: [], es: [], it: [] };
   });
   const [newSentenceText, setNewSentenceText] = useState('');
-  const [newSentenceLang, setNewSentenceLang] = useState<'en' | 'fr'>('en');
+  const [newSentenceLang, setNewSentenceLang] = useState<'en' | 'fr' | 'es' | 'it'>('en');
   
   const [dyslexicFont, setDyslexicFont] = useState<'default' | 'lexend' | 'comic'>(() => (localStorage.getItem('tt_font') as 'default' | 'lexend' | 'comic') || 'default');
   const [zenMode, setZenMode] = useState(() => localStorage.getItem('tt_zen_mode') === 'true');
@@ -207,7 +207,7 @@ function App() {
     });
   };
 
-  const toggleLang = (l: 'en' | 'fr') => {
+  const toggleLang = (l: 'en' | 'fr' | 'es' | 'it') => {
     setLang(l);
     setInput('');
     setStartTime(null);
@@ -245,7 +245,11 @@ function App() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(targetSentence);
     // Set appropriate language tag for the voice engine
-    utterance.lang = lang === 'en' ? 'en-US' : 'fr-CA';
+    if (lang === 'en') utterance.lang = 'en-US';
+    else if (lang === 'fr') utterance.lang = 'fr-CA';
+    else if (lang === 'es') utterance.lang = 'es-ES';
+    else if (lang === 'it') utterance.lang = 'it-IT';
+    
     utterance.rate = 0.85; // slightly slower for better comprehension
     window.speechSynthesis.speak(utterance);
   };
@@ -267,10 +271,16 @@ function App() {
         </div>
         <div className="controls">
           <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); toggleLang('en'); }}>
-            <Globe size={18}/> EN (US)
+            <Globe size={18}/> EN
           </button>
           <button className={`lang-btn ${lang === 'fr' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); toggleLang('fr'); }}>
-            <Globe size={18}/> FR (CA)
+            <Globe size={18}/> FR
+          </button>
+          <button className={`lang-btn ${lang === 'es' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); toggleLang('es'); }}>
+            <Globe size={18}/> ES
+          </button>
+          <button className={`lang-btn ${lang === 'it' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); toggleLang('it'); }}>
+            <Globe size={18}/> IT
           </button>
           <button className="settings-btn" onClick={(e) => { 
             e.stopPropagation(); 
@@ -338,13 +348,18 @@ function App() {
             spellCheck="false"
             autoComplete="off"
             autoCorrect="off"
-            placeholder={lang === 'en' ? "Type here..." : "Tapez ici..."}
+            placeholder={
+              lang === 'en' ? "Type here..." : 
+              lang === 'fr' ? "Tapez ici..." :
+              lang === 'es' ? "Escribe aquí..." : "Digita qui..."
+            }
             aria-label="Typing input section"
           />
           <div className="keyboard-hint">
-            {lang === 'en' 
-              ? `Keyboard Layout: US English` 
-              : `Type in French! Make sure your keyboard is set to French (Canada).`}
+            {lang === 'en' && `Keyboard Layout: US English`}
+            {lang === 'fr' && `Type in French! Make sure your keyboard is set to French.`}
+            {lang === 'es' && `Type in Spanish! Make sure your keyboard is set to Spanish.`}
+            {lang === 'it' && `Type in Italian! Make sure your keyboard is set to Italian.`}
           </div>
         </section>
       </main>
@@ -448,11 +463,13 @@ function App() {
                       <label style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.65rem' }}>Lang</label>
                       <select 
                         value={newSentenceLang} 
-                        onChange={e => setNewSentenceLang(e.target.value as 'en' | 'fr')}
+                        onChange={e => setNewSentenceLang(e.target.value as 'en' | 'fr' | 'es' | 'it')}
                         style={{ padding: '0.75rem', borderRadius: '8px', background: 'var(--card-bg)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
                       >
                         <option value="en" style={{color: 'black'}}>EN</option>
                         <option value="fr" style={{color: 'black'}}>FR</option>
+                        <option value="es" style={{color: 'black'}}>ES</option>
+                        <option value="it" style={{color: 'black'}}>IT</option>
                       </select>
                     </div>
                     <button 
@@ -473,11 +490,11 @@ function App() {
 
                 <div className="sentence-list" style={{ marginTop: '1rem', maxHeight: '180px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <h4 style={{ marginBottom: '1rem', color: '#9ca3af', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Custom Sentences ({lang === 'en' ? 'English' : 'French'})</span>
+                    <span>Custom Sentences ({lang.toUpperCase()})</span>
                     <span style={{ fontSize: '0.8rem', background: 'var(--primary)', color: '#1a1a1a', padding: '0.2rem 0.5rem', borderRadius: '12px', fontWeight: 'bold' }}>{customSentences[lang].length}</span>
                   </h4>
                   {customSentences[lang].length === 0 ? (
-                    <div style={{ color: '#6b7280', fontSize: '0.9rem', fontStyle: 'italic' }}>No custom sentences added yet for {lang === 'en' ? 'English' : 'French'}. The app will use the {sentences[lang].length} built-in default sentences.</div>
+                    <div style={{ color: '#6b7280', fontSize: '0.9rem', fontStyle: 'italic' }}>No custom sentences added yet for {lang.toUpperCase()}. The app will use the {sentences[lang].length} built-in default sentences.</div>
                   ) : (
                     customSentences[lang].map((s, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
