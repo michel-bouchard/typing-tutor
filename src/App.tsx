@@ -42,7 +42,7 @@ function App() {
   const [focusMode, setFocusMode] = useState(() => localStorage.getItem('tt_focus_mode') === 'true');
   const [softErrors, setSoftErrors] = useState(() => localStorage.getItem('tt_soft_errors') === 'true');
   const [layoutMode, setLayoutMode] = useState<'vertical' | 'horizontal'>(() => (localStorage.getItem('tt_layout') as 'vertical' | 'horizontal') || 'horizontal');
-  const [spaceMode, setSpaceMode] = useState<'always' | 'jit'>(() => (localStorage.getItem('tt_space_mode') as 'always' | 'jit') || 'jit');
+  const [spaceMode, setSpaceMode] = useState<'always' | 'jit' | 'hidden'>(() => (localStorage.getItem('tt_space_mode') as 'always' | 'jit' | 'hidden') || 'jit');
   
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -627,6 +627,17 @@ function App() {
                           style={{ width: 'auto' }}
                         /> 
                         Always Show
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input 
+                          type="radio" 
+                          name="spaceMode" 
+                          value="hidden" 
+                          checked={spaceMode === 'hidden'} 
+                          onChange={(e) => setSpaceMode(e.target.value as 'hidden')} 
+                          style={{ width: 'auto' }}
+                        /> 
+                        Hidden
                       </label>
                     </div>
                   </div>

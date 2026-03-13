@@ -163,6 +163,12 @@
   opacity: 1;
 }
 
+/* Hidden Space Mode Logic */
+.space-mode-hidden .char.space-char {
+  color: transparent; /* entirely hidden */
+  opacity: 0;
+}
+
 .char.space-char.current {
   color: #3b82f6;
   opacity: 1;
