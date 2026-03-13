@@ -163,10 +163,13 @@
   opacity: 1;
 }
 
-/* Hidden Space Mode Logic */
-.space-mode-hidden .char.space-char {
-  color: transparent; /* entirely hidden */
-  opacity: 0;
+/* Hidden Space Mode Logic - MUST override .current */
+.space-mode-hidden .char.space-char,
+.space-mode-hidden .char.space-char.current {
+  color: transparent !important; /* entirely hidden */
+  opacity: 0 !important;
+  font-weight: normal;
+  text-shadow: none;
 }
 
 .char.space-char.current {
