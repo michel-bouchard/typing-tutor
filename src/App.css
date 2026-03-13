@@ -145,6 +145,21 @@
   text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
 
+.char.space-char {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.char.space-char.current {
+  color: #3b82f6;
+  opacity: 1;
+  font-weight: bold;
+}
+
+.char.space-char.correct {
+  opacity: 0.2;
+}
+
 .char.incorrect {
   color: var(--error);
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);

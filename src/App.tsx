@@ -314,6 +314,9 @@ function App() {
                 } else if (index === input.length) {
                   className += ' current';
                 }
+                if (char === ' ') {
+                  className += ' space-char';
+                }
 
                 if (focusMode) {
                   let lastSpaceIdx = targetSentence.lastIndexOf(' ', input.length);
@@ -324,6 +327,8 @@ function App() {
                   
                   if (index >= wordStart && index < wordEnd) {
                     className += ' focus-active';
+                  } else if (index === input.length && char === ' ') {
+                    className += ' focus-active';
                   } else {
                     className += ' focus-dimmed';
                   }
@@ -331,7 +336,7 @@ function App() {
 
                 return (
                 <span key={index} className={className}>
-                  {char}
+                  {char === ' ' ? '·' : char}
                 </span>
               );
             })}
